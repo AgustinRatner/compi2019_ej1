@@ -688,8 +688,20 @@ namespace at.jku.ssw.cc
                     methodDecl.Nodes.Add("')'");
                     MessageBoxCon3Preg();
                 }
-                
-                //Comienza Nodo Declaration.
+
+                //CORRECCIÓN AGUSTIN RATNER --> Cambio el orden de llamada en regla "8 - MethodDecl" quedando ...(pars) Block PosDeclars
+                //Comienza Block
+                Block(methodDecl);  //Bloque dentro de MethodDecl() 
+                System.Windows.Forms.TreeNode block = new System.Windows.Forms.TreeNode("Block");
+                methodDecl.Nodes.Add(block);
+                MessageBoxCon3Preg();
+                Code.seleccLaProdEnLaGram(16);
+                MessageBoxCon3Preg();
+
+                //CORRECCIÓN AGUSTIN RATNER --> Esto debería ir dentro de "Statement" llamado por "Block" ya que van a ser todas las declaraciones locales, 
+                //especificamente en el case "TYPE" de Statement.
+
+                /*//Comienza Nodo Declaration.
                 System.Windows.Forms.TreeNode posDeclars = new System.Windows.Forms.TreeNode("PosDeclars");
                 methodDecl.Nodes.Add(posDeclars);
                 MessageBoxCon3Preg();
@@ -701,7 +713,7 @@ namespace at.jku.ssw.cc
                     while (la != Token.LBRACE && la != Token.EOF)
                     //void Main()==> int x,i; {val = new Table;....}
                     {
-                        if (la == Token.IDENT)
+                        if (la == Token.TYPE)
                         {
                             //encuentraDecl = true;
                             Code.Colorear("latoken"); //colorea "int"  en int i; 
@@ -725,7 +737,7 @@ namespace at.jku.ssw.cc
                         }
                     }
                     //Termina Vardecl.
-                Code.seleccLaProdEnLaGram(2);
+                Code.seleccLaProdEnLaGram(2);*/
 
                 if (cantVarLocales > 0)
                 {
@@ -738,7 +750,10 @@ namespace at.jku.ssw.cc
                     Code.cargaInstr(instrParaVarsLocs);
 
                 }
-                Code.seleccLaProdEnLaGram(1);
+
+                //CORRECCIÓN AGUSTIN RATNER
+
+                /*Code.seleccLaProdEnLaGram(1);
                 MessageBoxCon3Preg();
                 System.Windows.Forms.TreeNode posDeclarsAux = new System.Windows.Forms.TreeNode("PosDeclars");
                 posDeclarsAux.Nodes.Add(".");
@@ -747,9 +762,11 @@ namespace at.jku.ssw.cc
                 Code.Colorear("latoken");  //"{"
                 MessageBoxCon3Preg();
                 Code.seleccLaProdEnLaGram(8);
-                MessageBoxCon3Preg();
+                MessageBoxCon3Preg();*/
+                
+                //CORRECCIÓN AGUSTIN RATNER --> Cambio el orden de llamada en regla "8 - MethodDecl" quedando ...(pars) Block PosDeclars
                 //Comienza Block
-                Block(methodDecl);  //Bloque dentro de MethodDecl() 
+                //Block(methodDecl);  //Bloque dentro de MethodDecl() 
                 curMethod.nArgs = Tab.topScope.nArgs;
                 curMethod.nLocs = Tab.topScope.nLocs;
                 curMethod.locals = Tab.topScope.locals;
@@ -792,14 +809,14 @@ namespace at.jku.ssw.cc
         {
             Code.seleccLaProdEnLaGram(12);
             Code.cargaProgDeLaGram("Type = ident LbrackOpc.");
-            if (la != Token.IDENT)  //debe venir un tipo (int por ej)
+            if (la != Token.TYPE)  //debe venir un tipo (int por ej)
             {
                 Errors.Error("espera un tipo");
                 xType = Tab.noType;
             }
             else
             {
-                Check(Token.IDENT); //=> token=int y laToken=[,  .....token=int y laToken=size, en int size 
+                Check(Token.TYPE); //=> token=int y laToken=[,  .....token=int y laToken=size, en int size 
                 //Code.Colorear("token"); //si viene de... yaPintado = true => no pinta nada
 
                 Symbol sym = Tab.Find(token.str);  //busca int  y devuelve el Symbol p/int
@@ -935,7 +952,9 @@ namespace at.jku.ssw.cc
                 }
                 Check(Token.SEMICOLON);//falta nodo aca//
             }
-            else
+            //OBSERVACIÓN AGUSTIN RATNER --> En la regla "18 - Statement" debería haber otra posible producción, ya que en este "else" nunca
+            //se llama a la regla "Designator". 
+            else //Por aca entraria si es un "TYPE" por ej
             {
                 Item item, itemAncho;
                 switch (la)
@@ -1010,6 +1029,69 @@ namespace at.jku.ssw.cc
                             //más: ir a la linea correspondiente y marcar el label con la instr corriente
                             //más: reescribe cil (nuevoRichTexBox3) rectificando la marca
                         }
+                        break;
+                    //CORRECCIÓN AGUSTIN RATNER --> Aca debería reconocer un TYPE e irse a la regla "PosDeclars"
+                    case Token.TYPE:
+                        //Check(Token.TYPE);
+                        Code.seleccLaProdEnLaGram(1);
+                        //Comienza Nodo Declaration.
+                        System.Windows.Forms.TreeNode posDeclars = new System.Windows.Forms.TreeNode("PosDeclars");
+                        statement.Nodes.Add(posDeclars);
+                        MessageBoxCon3Preg(statement);
+          
+                        Code.seleccLaProdEnLaGram(1);
+                        MessageBoxCon3Preg();
+                        //bool encuentraDecl = false;
+                        Code.CreateMetadata(curMethod);  //genera il
+                                                         //Declaraciones  por ahora solo decl de var, luego habria q agregar const y clases
+
+    
+                        while (la != Token.LBRACE && la != Token.EOF)
+                        //void Main()==> int x,i; {val = new Table;....}
+                        {
+                            if (la == Token.TYPE)
+                            {
+                                //encuentraDecl = true;
+                                Code.Colorear("latoken"); //colorea "int"  en int i; 
+                                                          //Infiere la 2° opcion de PosDeclars   aaaaaaaa
+                                System.Windows.Forms.TreeNode declaration = new System.Windows.Forms.TreeNode("Declaration");
+                                posDeclars.Nodes.Add(declaration);
+                                posDeclars.ExpandAll();
+                                MessageBoxCon3Preg();
+                                Code.seleccLaProdEnLaGram(2);
+                                System.Windows.Forms.TreeNode varDecl = new System.Windows.Forms.TreeNode("VarDecl");
+                                declaration.Nodes.Add(varDecl);
+                                declaration.ExpandAll();
+                                MessageBoxCon3Preg();
+                                Code.seleccLaProdEnLaGram(6);
+                                VardDecl(Symbol.Kinds.Local, varDecl); // int x,i; en MethodDecl()  con int ya consumido
+                            }
+                            //CORRECCIÓN AGUSTIN RATNER --> En caso que sea un "IDENT" posiblemente sea un "Designator" por lo tanto debemos salir del while
+                            else if (la == Token.IDENT)
+                            {
+                                break;
+                            }
+                            else
+                            {
+                                token = laToken;
+                                Errors.Error("espero una declaracion de variable");
+                            }
+                        }
+                        //Termina Vardecl.
+                        Code.seleccLaProdEnLaGram(2);
+
+                        Code.seleccLaProdEnLaGram(1);
+                        MessageBoxCon3Preg();
+                        System.Windows.Forms.TreeNode posDeclarsAux = new System.Windows.Forms.TreeNode("PosDeclars");
+                        posDeclarsAux.Nodes.Add(".");
+                        posDeclarsAux.ExpandAll();
+                        posDeclars.Nodes.Add(posDeclarsAux);
+                        Code.Colorear("latoken");  //Lo que le sigue a la llave de cierre del main o la llave de cierre del main (No estoy seguro)
+                        MessageBoxCon3Preg();
+                        Code.seleccLaProdEnLaGram(18);
+                        MessageBoxCon3Preg();
+                        Code.seleccLaProdEnLaGram(17);
+                        MessageBoxCon3Preg();
                         break;
 
                     case Token.WHILE:
@@ -1335,9 +1417,10 @@ namespace at.jku.ssw.cc
             int ii = 1;
             while (la != Token.RBRACE)
             {
+                //CORRECCIÓN AGUSTIN RATNER --> Agrego un "TYPE" ya que después de "{" viene la declaración local "int x".
                 if ((la == Token.IDENT || la == Token.IF || la == Token.WHILE || la == Token.BREAK
                   || la == Token.RETURN || la == Token.READ || la == Token.WRITE || la == Token.WRITELN
-                  || la == Token.LBRACE || la == Token.SEMICOLON) && la != Token.EOF)
+                  || la == Token.LBRACE || la == Token.SEMICOLON || la == Token.TYPE) && la != Token.EOF)
                 {
                     Code.Colorear("latoken");
                     System.Windows.Forms.TreeNode statement = new System.Windows.Forms.TreeNode("Statement");
