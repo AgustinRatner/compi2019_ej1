@@ -1,0 +1,10 @@
+class ProgPpal      
+{
+void Main()
+{
+int x;
+x=2+(3+5)*5;
+int y;
+y=5;
+}
+}
