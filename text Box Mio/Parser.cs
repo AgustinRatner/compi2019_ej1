@@ -691,6 +691,7 @@ namespace at.jku.ssw.cc
                 }
 
                 //Comienza Nodo Declaration.
+                Code.CreateMetadata(curMethod);
                 //Comienza Block
                 Block(methodDecl);  //Bloque dentro de MethodDecl()
                 System.Windows.Forms.TreeNode block = new System.Windows.Forms.TreeNode("Block");
@@ -749,17 +750,19 @@ namespace at.jku.ssw.cc
                 Parser.cil[Parser.nroDeInstrCorriente].accionInstr = Parser.AccionInstr.ret;
                 Code.cargaInstr("ret");
 
+                //Aca al modificar la regla (8) nunca voy a "PosDeclars" después.
 
-                Code.seleccLaProdEnLaGram(1);
+                /*Code.seleccLaProdEnLaGram(1);
                 MessageBoxCon3Preg();
                 System.Windows.Forms.TreeNode posDeclarsAux = new System.Windows.Forms.TreeNode("PosDeclars");
                 posDeclarsAux.Nodes.Add(".");
                 posDeclarsAux.ExpandAll();
-                methodDecl.Nodes.Add(posDeclarsAux);
+                methodDecl.Nodes.Add(posDeclarsAux);*/
                 Code.Colorear("latoken");  //"}"
                 MessageBoxCon3Preg();
                 Code.seleccLaProdEnLaGram(8);
                 MessageBoxCon3Preg();
+
                 //Comienza Block
                 /*Block(methodDecl);  //Bloque dentro de MethodDecl() 
                 curMethod.nArgs = Tab.topScope.nArgs;
@@ -1030,7 +1033,7 @@ namespace at.jku.ssw.cc
                         MessageBoxCon3Preg(statement);
                         Code.seleccLaProdEnLaGram(1);
                         MessageBoxCon3Preg();
-                        Code.CreateMetadata(curMethod);
+                        //Code.CreateMetadata(curMethod);
 
                         while (la != Token.LBRACE && la != Token.EOF)
                         //void Main()==> int x,i; {val = new Table;....}
@@ -1051,6 +1054,8 @@ namespace at.jku.ssw.cc
                                 MessageBoxCon3Preg();
                                 Code.seleccLaProdEnLaGram(6);
                                 VardDecl(Symbol.Kinds.Local, varDecl); // int x,i; en MethodDecl()  con int ya consumido
+
+                                
                             }
                             else
                                 break;
@@ -1079,7 +1084,7 @@ namespace at.jku.ssw.cc
                         posDeclarsAux.Nodes.Add(".");
                         posDeclarsAux.ExpandAll();
                         posDeclars.Nodes.Add(posDeclarsAux);
-                        Code.Colorear("latoken");  //Lo que le sigue a la llave de cierre del main o la llave de cierre del main (No estoy seguro)
+                        Code.Colorear("latoken");  
                         Code.seleccLaProdEnLaGram(18);
                         MessageBoxCon3Preg();
                         Code.seleccLaProdEnLaGram(17);
