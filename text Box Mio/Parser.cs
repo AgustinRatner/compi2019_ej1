@@ -1026,7 +1026,7 @@ namespace at.jku.ssw.cc
                             //más: reescribe cil (nuevoRichTexBox3) rectificando la marca
                         }
                         break;
-                    case Token.TYPE:
+                    /*case Token.TYPE:
                         
                         System.Windows.Forms.TreeNode posDeclars = new System.Windows.Forms.TreeNode("PosDeclars");
                         statement.Nodes.Add(posDeclars);
@@ -1090,6 +1090,7 @@ namespace at.jku.ssw.cc
                         Code.seleccLaProdEnLaGram(17);
                         MessageBoxCon3Preg();
                         break;
+                    */
 
                     case Token.WHILE:
                         //Item x;
@@ -1398,8 +1399,8 @@ namespace at.jku.ssw.cc
             MessageBoxCon3Preg(methodDecl);
             Code.Colorear("token");
             /////// Agrega 'StatementsOpc' al arbol
-            System.Windows.Forms.TreeNode statementsopc = new System.Windows.Forms.TreeNode("StatementsOpc");
-            block.Nodes.Add(statementsopc);
+            System.Windows.Forms.TreeNode declarsAndSentences = new System.Windows.Forms.TreeNode("DeclarsAndSentences");
+            block.Nodes.Add(declarsAndSentences);
             block.ExpandAll();
             MessageBoxCon3Preg(block);
             Code.seleccLaProdEnLaGram(17);
@@ -1407,47 +1408,123 @@ namespace at.jku.ssw.cc
             if (la == Token.RBRACE)
             {
                 Code.Colorear("latoken");
-                statementsopc.Nodes.Add(".");
-                statementsopc.ExpandAll();
-                MessageBoxCon3Preg(statementsopc);
+                declarsAndSentences.Nodes.Add(".");
+                declarsAndSentences.ExpandAll();
+                MessageBoxCon3Preg(declarsAndSentences);
             }
             int ii = 1;
             while (la != Token.RBRACE)
             {
                 if ((la == Token.IDENT || la == Token.IF || la == Token.WHILE || la == Token.BREAK
                   || la == Token.RETURN || la == Token.READ || la == Token.WRITE || la == Token.WRITELN
-                  || la == Token.LBRACE || la == Token.SEMICOLON || la == Token.TYPE) && la != Token.EOF)
+                  || la == Token.LBRACE || la == Token.SEMICOLON || la == Token.TYPE || la == Token.CONST) && la != Token.EOF)
                 {
                     Code.Colorear("latoken");
-                    System.Windows.Forms.TreeNode statement = new System.Windows.Forms.TreeNode("Statement");
-                    statementsopc.Nodes.Add(statement);
-                    statementsopc.ExpandAll();
-                    MessageBoxCon3Preg(statement);
-                    Code.seleccLaProdEnLaGram(18);
-                    if (ZZ.ParserStatem)
+
+                    if(la != Token.TYPE && la != Token.CONST) //Quiere decir que es una "sentencia"
                     {
-                        Console.WriteLine(".......Comienza statement nro:");
-                        Console.Write(ii); Console.WriteLine("->" + laToken.str);
+                        System.Windows.Forms.TreeNode statement = new System.Windows.Forms.TreeNode("Statement");
+                        declarsAndSentences.Nodes.Add(statement);
+                        declarsAndSentences.ExpandAll();
+                        MessageBoxCon3Preg(statement);
+                        Code.seleccLaProdEnLaGram(18);
+                        if (ZZ.ParserStatem)
+                        {
+                            Console.WriteLine(".......Comienza statement nro:");
+                            Console.Write(ii); Console.WriteLine("->" + laToken.str);
+                        }
+
+                        Statement(statement);  //dentro de block()
+                    }
+                    else
+                    {
+                        //37.DeclarationInsideMethod = ConstDecl | VarDecl.
+
+                        System.Windows.Forms.TreeNode DeclarationInsideMethod = new System.Windows.Forms.TreeNode("DeclarationInsideMethod");
+                        declarsAndSentences.Nodes.Add(DeclarationInsideMethod);
+                        MessageBoxCon3Preg(declarsAndSentences);
+                        Code.seleccLaProdEnLaGram(37);
+                        MessageBoxCon3Preg();
+                        Code.Colorear("latoken");
+
+                        //Code.CreateMetadata(curMethod);
+
+                        if (la != Token.LBRACE && la != Token.EOF)
+                        {
+                            if (la == Token.TYPE)
+                            {
+                                //encuentraDecl = true;
+                                System.Windows.Forms.TreeNode hijoVarDecl = new System.Windows.Forms.TreeNode("VarDecl");
+                                DeclarationInsideMethod.Nodes.Add(hijoVarDecl);
+                                DeclarationInsideMethod.ExpandAll();
+                                MessageBoxCon3Preg();
+                                Code.seleccLaProdEnLaGram(6);
+                                VardDecl(Symbol.Kinds.Local, hijoVarDecl); // int x,i; en MethodDecl()  con int ya consumido
+                            }
+                            else if(la == Token.CONST)
+                            {
+                                System.Windows.Forms.TreeNode hijoConstDecl = new System.Windows.Forms.TreeNode("ConstDecl");
+                                DeclarationInsideMethod.Nodes.Add(hijoConstDecl);
+                                ConstDecl(hijoConstDecl);
+                            }
+
+                            Code.seleccLaProdEnLaGram(37);
+                            MessageBoxCon3Preg();
+                        }
+                                
+                        Code.Colorear("latoken");
+                        Code.seleccLaProdEnLaGram(18);
+                        MessageBoxCon3Preg();
+                        Code.seleccLaProdEnLaGram(17);
+                        MessageBoxCon3Preg();
                     }
 
-                    Statement(statement);  //dentro de block()
+                    //Haya sido Declaration o Statement debe volver a la regla 17
+                    Code.seleccLaProdEnLaGram(17);
+                    MessageBoxCon3Preg();
 
                 }//Fin if 
                 else
                 {
-                    token.line = Scanner.line; token.col = Scanner.col - 1;
-                    token.str = "?";
-                    Errors.Error("Espero una sentencia");
+                    //Si no se cumple esta condición es que llegamos al final "}", y debe salir del While
+                    if (la != Token.RBRACE)
+                    {
+                        token.line = Scanner.line; token.col = Scanner.col - 1;
+                        token.str = "?";
+                        Errors.Error("Espero una sentencia o una declaración");
+                    }   
                 }
                 ii++;
-                Code.seleccLaProdEnLaGram(17);
+
             }//Fin while
-            MessageBoxCon3Preg();
-            Check(Token.RBRACE);
+
+            //Aca genera las instrucciones de las "Declaraciones de variables"
+            if (cantVarLocales > 0)
+            {
+                string instrParaVarsLocs = ".locals init(int32 V_0";
+                for (int i = 1; i < cantVarLocales; i++)
+                {
+                    instrParaVarsLocs = instrParaVarsLocs + "," + "\n          int32 V_" + i.ToString(); // +"  ";
+                }
+                instrParaVarsLocs = instrParaVarsLocs + ")";
+                Code.cargaInstr(instrParaVarsLocs);
+
+            }
+
+            System.Windows.Forms.TreeNode DeclarsAndSentencesAux = new System.Windows.Forms.TreeNode("DeclarsAndSentences");
+            DeclarsAndSentencesAux.Nodes.Add(".");
+            DeclarsAndSentencesAux.ExpandAll();
+            declarsAndSentences.Nodes.Add(DeclarsAndSentencesAux);
+
             Code.seleccLaProdEnLaGram(16);
+            MessageBoxCon3Preg();
             block.Nodes.Add("'}'");
-            MessageBoxCon3Preg(block);
+            MessageBoxCon3Preg();
+
+            Check(Token.RBRACE);
             Code.Colorear("token");
+            MessageBoxCon3Preg();
+            
         }//Fin Block
 
         static void ActPars()
