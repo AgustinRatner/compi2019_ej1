@@ -657,6 +657,7 @@ namespace at.jku.ssw.cc
                 MessageBoxCon3Preg();
                 Code.Colorear("token");
                 Check(Token.IDENT);  //Main por ej.  //token = Main, laToken = "("
+                MessageBoxCon3Preg();
                 Code.Colorear("token");
                 curMethod = Tab.Insert(Symbol.Kinds.Meth, token.str, type);//inserta void Main 
                 Tab.OpenScope(curMethod);
@@ -670,24 +671,39 @@ namespace at.jku.ssw.cc
                 MessageBoxCon3Preg();
                 Code.seleccLaProdEnLaGram(10);
                 MessageBoxCon3Preg();
-                if (la == Token.IDENT)
+  
+                if (la != Token.TYPE) //Antes la == Token.TYPE
                 {
-                    FormPars(pars);  //Aqui hay que crear los symbolos para los args 
-                    Code.Colorear("token");  //pinta el ")"
-                    methodDecl.Nodes.Add("')'");
-                    MessageBoxCon3Preg();
+                    //infiere que no hay params => 1) debe venir un ")". 2) La pocion de la produccion es "."
+                    //Aqui hay que crear los symbolos para los args
+
+                    if (la != Token.RPAR) //A esto lo agregue para que cuando no se ponga un "TYPE" diga se esperaba un type
+                        Check(Token.TYPE-1);
+
+
+                    Code.Colorear("latoken");  //pinta el ")"
                     Check(Token.RPAR);
+                    MessageBoxCon3Preg();
+                    pars.Nodes.Add(".");
+                    pars.ExpandAll();
+                    MessageBoxCon3Preg();
+                    Code.seleccLaProdEnLaGram(8);
+                    MessageBoxCon3Preg();
+                    methodDecl.Nodes.Add("')'");
+                    MessageBoxCon3Preg();    
                 }
                 else
                 {
-                    //infiere que no hay params => 1) debe venir un ")". 2) La pocion de la produccion es "."
-                    Code.Colorear("latoken");  //pinta el ")"
-                    Check(Token.RPAR);
-                    Code.seleccLaProdEnLaGram(8);
-                    pars.Nodes.Add(".");
-                    pars.ExpandAll();
-                    methodDecl.Nodes.Add("')'");
+                    
+                    System.Windows.Forms.TreeNode formPars = new System.Windows.Forms.TreeNode("FormPars");
+                    pars.Nodes.Add(formPars);
                     MessageBoxCon3Preg();
+                    pars.ExpandAll();
+
+                    FormPars(Symbol.Kinds.Arg,pars);
+                    Check(Token.RPAR); //Luego debe venir ")" al finalizar la lista de parametros
+                    Code.Colorear("token");
+    
                 }
 
                 //Comienza Nodo Declaration.
@@ -777,29 +793,86 @@ namespace at.jku.ssw.cc
             }
         }//Fin MethodDecl
 
-        static void FormPars(System.Windows.Forms.TreeNode padre)//Falta Árbol
+        static void FormPars(Symbol.Kinds kind, System.Windows.Forms.TreeNode padre)//Falta Árbol
         {
-            Struct type = new Struct(Struct.Kinds.None);
-            if (la == Token.IDENT)
+            Struct type;
+ 
+            switch (laToken.str)
             {
-                Type(out type); // 
+                case "int":
+                    type = new Struct(Struct.Kinds.Int);
+                    break;
+                case "char":
+                    type = new Struct(Struct.Kinds.Char);
+                    break;
+                default:
+                    type = new Struct(Struct.Kinds.None);
+                    break;
+            }
+
+            if (la == Token.TYPE)
+            {
+                Type(out type); // pasa a ser token = "type" y laToken="ident" porque dentro de "Type" se hace un "CHECK"
+
+                cantVarLocales++; //provisorio: esto deberia hacerlo solo para el caso de var locales (no para var globales)
+                Symbol vble = Tab.Insert(kind, laToken.str, type); //Mostraria el "nombre del parametro"
+                Code.CreateMetadata(vble);
+                
+                Code.Colorear("token");
+                
                 Code.seleccLaProdEnLaGram(5);
                 Code.cargaProgDeLaGram("PossFormPars = FormPar CommaFormParsOpc.");
-                Code.Colorear("token");
+
                 Check(Token.IDENT);
                 Code.Colorear("token");
-                while (la == Token.COMMA && la != Token.EOF)
+                while (la == Token.COMMA && la != Token.EOF && la != Token.RPAR)
                 {
                     Check(Token.COMMA);
-                    Code.cargaProgDeLaGram("CommaFormParsOpc = ',' FormPar CommaFormParsOpc.");
                     Code.Colorear("token");
+
+
+                    switch (laToken.str)
+                    {
+                        case "int":
+                            type = new Struct(Struct.Kinds.Int);
+                            break;
+                        case "char":
+                            type = new Struct(Struct.Kinds.Char);
+                            break;
+                        default:
+                            type = new Struct(Struct.Kinds.None);
+                            break;
+                    }
+
                     Type(out type);
+
+                    cantVarLocales++; //provisorio: esto deberia hacerlo solo para el caso de var locales (no para var globales)
+                    vble = Tab.Insert(kind, laToken.str, type);
+                    Code.CreateMetadata(vble);
+
+                    Code.cargaProgDeLaGram("CommaFormParsOpc = ',' FormPar CommaFormParsOpc.");
+         
+
                     Check(Token.IDENT);
                     Code.seleccLaProdEnLaGram(6);
                     Code.cargaProgDeLaGram("PossFormPars = FormPar CommaFormParsOpc.");
                     Code.Colorear("token");
                 }//Fin while
                 Code.cargaProgDeLaGram("CommaFormParsOpc = .");
+
+
+                //DUDA SI TENGO QUE MOSTRAR EN EL ARBOL CUANDO INICIALIZAN LOS PARÁMETROS O NO.
+                /*if (cantVarLocales > 0)
+                {
+                    string instrParaVarsLocs = ".locals init(int32 V_0";
+                    for (int i = 1; i < cantVarLocales; i++)
+                    {
+                        instrParaVarsLocs = instrParaVarsLocs + "," + "\n          int32 V_" + i.ToString(); // +"  ";
+                    }
+                    instrParaVarsLocs = instrParaVarsLocs + ")";
+                    Code.cargaInstr(instrParaVarsLocs);
+
+                }*/
             }
         }//Fin FormPars
 
@@ -1435,6 +1508,8 @@ namespace at.jku.ssw.cc
                         }
 
                         Statement(statement);  //dentro de block()
+
+                        ii++;
                     }
                     else
                     {
@@ -1494,7 +1569,7 @@ namespace at.jku.ssw.cc
                         Errors.Error("Espero una sentencia o una declaración");
                     }   
                 }
-                ii++;
+                
 
             }//Fin while
 
