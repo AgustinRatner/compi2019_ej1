@@ -335,6 +335,7 @@ namespace at.jku.ssw.cc
             while ((la == Token.IDENT || la == Token.VOID) && la != Token.EOF)
             {
                 MethodDecl(methodDeclsOpc);  //void Main() int x,i; {val = new Table;....}
+                cantVarLocales = 0;
             }
 
             Check(Token.RBRACE);
@@ -860,19 +861,6 @@ namespace at.jku.ssw.cc
                 }//Fin while
                 Code.cargaProgDeLaGram("CommaFormParsOpc = .");
 
-
-                //DUDA SI TENGO QUE MOSTRAR EN EL ARBOL CUANDO INICIALIZAN LOS PARÁMETROS O NO.
-                /*if (cantVarLocales > 0)
-                {
-                    string instrParaVarsLocs = ".locals init(int32 V_0";
-                    for (int i = 1; i < cantVarLocales; i++)
-                    {
-                        instrParaVarsLocs = instrParaVarsLocs + "," + "\n          int32 V_" + i.ToString(); // +"  ";
-                    }
-                    instrParaVarsLocs = instrParaVarsLocs + ")";
-                    Code.cargaInstr(instrParaVarsLocs);
-
-                }*/
             }
         }//Fin FormPars
 
