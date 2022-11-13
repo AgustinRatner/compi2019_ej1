@@ -8,12 +8,12 @@
  7.IdentifiersOpc =  . | "," ident IdentifiersOpc.
  8.MethodDecl = TypeOrVoid  ident "(" Pars ")" Block.
  9.TypeOrVoid  = Type | "void".
-10.Pars = . | FormPar CommaFormParsOpc. 
+10.Pars = . | FormPars. 
 11.CommaFormParsOpc =  . |  "," FormPar CommaFormParsOpc. 
-12.Type	= ident  LbrackOpc.
-13.LbrackOpc = . | "[" "]".
+12.Type	= LbrackOpc.
+13.LbrackOpc = . | "[" "]" LbrackOpc.
 14.FormPars	=	 Type ident CommaTypeIdentOpc.
-15.CommaTypeIdentOpc = . |"," Type ident .
+15.CommaTypeIdentOpc = . |"," Type ident CommaTypeIdentOpc.
 16.Block = "{"  DeclarsAndSentences "}".
 17.DeclarsAndSentences = . | DeclarationInsideMethod DeclarsAndSentences | Statement DeclarsAndSentences. 
 18.Statement =	Designator RestOfStatement. 

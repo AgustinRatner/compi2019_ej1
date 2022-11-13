@@ -690,8 +690,7 @@ namespace at.jku.ssw.cc
                     MessageBoxCon3Preg();
                     Code.seleccLaProdEnLaGram(8);
                     MessageBoxCon3Preg();
-                    methodDecl.Nodes.Add("')'");
-                    MessageBoxCon3Preg();    
+                    
                 }
                 else
                 {
@@ -699,13 +698,27 @@ namespace at.jku.ssw.cc
                     System.Windows.Forms.TreeNode formPars = new System.Windows.Forms.TreeNode("FormPars");
                     pars.Nodes.Add(formPars);
                     MessageBoxCon3Preg();
-                    pars.ExpandAll();
+                    pars.ExpandAll(); //"Expand()" y "ExpandAll" hacen lo mismo.
+                    MessageBoxCon3Preg();
+                    Code.seleccLaProdEnLaGram(14);
 
-                    FormPars(Symbol.Kinds.Arg,pars);
-                    Check(Token.RPAR); //Luego debe venir ")" al finalizar la lista de parametros
-                    Code.Colorear("token");
-    
+                    FormPars(Symbol.Kinds.Arg,formPars);
+
+                    MessageBoxCon3Preg();
+                    Code.seleccLaProdEnLaGram(10);
+                    MessageBoxCon3Preg();
+                    Code.seleccLaProdEnLaGram(8);
+                    MessageBoxCon3Preg();
+
                 }
+
+                Check(Token.RPAR); //Luego debe venir ")" al finalizar la lista de parametros
+                Code.Colorear("token");
+                MessageBoxCon3Preg();
+                methodDecl.Nodes.Add("')'");
+                MessageBoxCon3Preg();
+                methodDecl.Expand();
+                MessageBoxCon3Preg();
 
                 //Comienza Nodo Declaration.
                 Code.CreateMetadata(curMethod);
@@ -811,26 +824,109 @@ namespace at.jku.ssw.cc
                     break;
             }
 
+            System.Windows.Forms.TreeNode typeRule = new System.Windows.Forms.TreeNode("Type");
+            padre.Nodes.Add(typeRule);
+            MessageBoxCon3Preg();
+            padre.ExpandAll(); //"Expand()" y "ExpandAll" hacen lo mismo.
+            MessageBoxCon3Preg();
+            Code.seleccLaProdEnLaGram(12);
+
             if (la == Token.TYPE)
             {
+                System.Windows.Forms.TreeNode lbrackOpc = new System.Windows.Forms.TreeNode("LbrackOpc");
+                typeRule.Nodes.Add(lbrackOpc);
+                MessageBoxCon3Preg();
+                typeRule.ExpandAll();
+                MessageBoxCon3Preg();
+                Code.seleccLaProdEnLaGram(13);
+                Code.cargaProgDeLaGram("LbrackOpc = . | \"[\" \"].");
+
                 Type(out type); // pasa a ser token = "type" y laToken="ident" porque dentro de "Type" se hace un "CHECK"
 
-                cantVarLocales++; //provisorio: esto deberia hacerlo solo para el caso de var locales (no para var globales)
-                Symbol vble = Tab.Insert(kind, laToken.str, type); //Mostraria el "nombre del parametro"
-                Code.CreateMetadata(vble);
-                
-                Code.Colorear("token");
-                
-                Code.seleccLaProdEnLaGram(5);
-                Code.cargaProgDeLaGram("PossFormPars = FormPar CommaFormParsOpc.");
+
+                MessageBoxCon3Preg();
+                Code.Colorear("latoken"); //Aca pinta de Verde a "ident" del 1° parámetro o a "[" para determinar camino a seguir en la regla 13 
+
+
+                if (la == Token.IDENT)
+                {
+                    cantVarLocales++; //provisorio: esto deberia hacerlo solo para el caso de var locales (no para var globales)
+                    Symbol vble = Tab.Insert(kind, laToken.str, type); //Mostraria el "nombre del parametro"
+                    Code.CreateMetadata(vble);
+
+                    lbrackOpc.Nodes.Add(".");
+                    MessageBoxCon3Preg();
+
+                }
+                else //Por aca viene "[]" o puede venir [][] entonces
+                {
+                    int contador = 0;
+
+                    while (la == Token.LBRACK && la != Token.RBRACK && contador < 1)
+                    {
+                        Check(Token.LBRACK);
+                        lbrackOpc.Nodes.Add("[");
+                        MessageBoxCon3Preg();
+                        lbrackOpc.Expand();//Ya fue coloreado de Verde, por eso no se colorea.
+                        MessageBoxCon3Preg();
+
+                        Check(Token.RBRACK);
+                        lbrackOpc.Nodes.Add("]");
+                        MessageBoxCon3Preg();
+                        lbrackOpc.Expand();
+                        MessageBoxCon3Preg();
+                        Code.Colorear("token");
+                        MessageBoxCon3Preg();
+                        contador++;
+                    }
+
+                    lbrackOpc.Nodes.Add(".");
+                    MessageBoxCon3Preg();
+
+                    if(la == Token.IDENT) //Este IF lo pongo, porque si esto fuera afuera del "else" agregaria la misma variable en caso
+                        //que haya entrado en el IF de línea 840
+                    {
+                        cantVarLocales++; //provisorio: esto deberia hacerlo solo para el caso de var locales (no para var globales)
+                        Symbol vble = Tab.Insert(kind, laToken.str, type); //Mostraria el "nombre del parametro"
+                        Code.CreateMetadata(vble);
+                    }
+                }
 
                 Check(Token.IDENT);
                 Code.Colorear("token");
+
+
+                MessageBoxCon3Preg();
+                Code.seleccLaProdEnLaGram(12);
+                MessageBoxCon3Preg();
+
+                padre.Nodes.Add("ident"); //Aca token="ident" al 1° parámetro digamos
+                MessageBoxCon3Preg();
+                Code.seleccLaProdEnLaGram(14);
+                MessageBoxCon3Preg();
+
+                Code.Colorear("latoken"); //Colorear de Verde ")" o "," porque no sabemos que viene en regla 15
+                MessageBoxCon3Preg();
+
+
+                System.Windows.Forms.TreeNode commaTypeIdentOpc = new System.Windows.Forms.TreeNode("CommaTypeIdentOpc");
+                padre.Nodes.Add(commaTypeIdentOpc);
+                MessageBoxCon3Preg();
+                padre.ExpandAll();
+                MessageBoxCon3Preg();
+                Code.seleccLaProdEnLaGram(15);
+                Code.cargaProgDeLaGram("CommaTypeIdentOpc = . | , Type ident .");
+                MessageBoxCon3Preg();
+
                 while (la == Token.COMMA && la != Token.EOF && la != Token.RPAR)
                 {
-                    Check(Token.COMMA);
-                    Code.Colorear("token");
+                    commaTypeIdentOpc.Nodes.Add(",");
+                    MessageBoxCon3Preg();
+                    commaTypeIdentOpc.ExpandAll();
+                    MessageBoxCon3Preg();
 
+                    Check(Token.COMMA);
+                    MessageBoxCon3Preg();
 
                     switch (laToken.str)
                     {
@@ -847,19 +943,107 @@ namespace at.jku.ssw.cc
 
                     Type(out type);
 
-                    cantVarLocales++; //provisorio: esto deberia hacerlo solo para el caso de var locales (no para var globales)
-                    vble = Tab.Insert(kind, laToken.str, type);
-                    Code.CreateMetadata(vble);
 
-                    Code.cargaProgDeLaGram("CommaFormParsOpc = ',' FormPar CommaFormParsOpc.");
-         
+                    System.Windows.Forms.TreeNode typeRule2 = new System.Windows.Forms.TreeNode("Type");
+                    commaTypeIdentOpc.Nodes.Add(typeRule2);
+                    MessageBoxCon3Preg();
+                    commaTypeIdentOpc.ExpandAll();
+                    MessageBoxCon3Preg();
+                    Code.seleccLaProdEnLaGram(12);
+                    MessageBoxCon3Preg();
+                    Code.Colorear("token");
+                    MessageBoxCon3Preg();
+
+                    System.Windows.Forms.TreeNode lbrackOpc2 = new System.Windows.Forms.TreeNode("LbrackOpc");
+                    typeRule2.Nodes.Add(lbrackOpc2);
+                    MessageBoxCon3Preg();
+                    typeRule2.ExpandAll();
+                    MessageBoxCon3Preg();
+                    Code.seleccLaProdEnLaGram(13);
+                    Code.cargaProgDeLaGram("LbrackOpc = . | \"[\" \"].");
+
+                    MessageBoxCon3Preg();
+                    Code.Colorear("latoken"); //viene "." o "["?
+                    MessageBoxCon3Preg();
+
+                    //En este IF y ELSE basicamente repetimos lo mismo que en la línea 840 - 875
+                    if (la == Token.IDENT)
+                    {
+                        cantVarLocales++;
+                        Symbol vble = Tab.Insert(kind, laToken.str, type);
+                        Code.CreateMetadata(vble);
+
+                        lbrackOpc2.Nodes.Add(".");
+                        MessageBoxCon3Preg();
+
+                    }
+                    else //Por aca viene "[]" o puede venir [][] entonces
+                    {
+                        int contador = 0;
+
+                        while (la == Token.LBRACK && la != Token.RBRACK && contador < 1)
+                        {
+                            Check(Token.LBRACK);
+                            lbrackOpc2.Nodes.Add("[");
+                            MessageBoxCon3Preg();
+                            lbrackOpc2.ExpandAll();
+                            MessageBoxCon3Preg();
+
+                            Check(Token.RBRACK);
+                            lbrackOpc2.Nodes.Add("]");
+                            MessageBoxCon3Preg();
+                            lbrackOpc2.ExpandAll();
+                            MessageBoxCon3Preg();
+                            Code.Colorear("token");
+                            MessageBoxCon3Preg();
+                            contador++;
+                        }
+
+                        lbrackOpc2.Nodes.Add(".");
+                        MessageBoxCon3Preg();
+
+                        if (la == Token.IDENT)
+                        {
+                            cantVarLocales++; //provisorio: esto deberia hacerlo solo para el caso de var locales (no para var globales)
+                            Symbol vble = Tab.Insert(kind, laToken.str, type); //Mostraria el "nombre del parametro"
+                            Code.CreateMetadata(vble);
+                        }
+                    }
 
                     Check(Token.IDENT);
-                    Code.seleccLaProdEnLaGram(6);
-                    Code.cargaProgDeLaGram("PossFormPars = FormPar CommaFormParsOpc.");
                     Code.Colorear("token");
+                    MessageBoxCon3Preg();
+
+
+                    MessageBoxCon3Preg();
+                    Code.seleccLaProdEnLaGram(12);
+                    MessageBoxCon3Preg();
+
+                    commaTypeIdentOpc.Nodes.Add("ident");
+                    MessageBoxCon3Preg();
+                    commaTypeIdentOpc.ExpandAll();
+                    MessageBoxCon3Preg();
+
+                    Code.seleccLaProdEnLaGram(15);
+                    MessageBoxCon3Preg();
+
+                    Code.Colorear("latoken"); //Colorear de Verde ")" o "," porque no sabemos que viene en regla 15
+                    MessageBoxCon3Preg();
+
                 }//Fin while
-                Code.cargaProgDeLaGram("CommaFormParsOpc = .");
+
+                MessageBoxCon3Preg();
+                Code.seleccLaProdEnLaGram(15);
+                MessageBoxCon3Preg();
+                Code.cargaProgDeLaGram("CommaTypeIdentOpc = .");
+
+                commaTypeIdentOpc.Nodes.Add(".");
+                MessageBoxCon3Preg();
+                padre.ExpandAll();
+                MessageBoxCon3Preg();
+
+                Code.seleccLaProdEnLaGram(14);
+                MessageBoxCon3Preg();
 
             }
         }//Fin FormPars
