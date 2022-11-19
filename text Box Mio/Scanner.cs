@@ -325,7 +325,7 @@ public class Scanner {
     public static void GeneraHashKeywords(){
        string[] keywords ={"break", "class", "const", "else",
                            "if", "new", "read","return",
-                           "void","while","write","writeln"
+                           "void","while","write","writeln","char","boolean","int","float","double"
                           };
        hashTableKeywords = new Hashtable();
         int i=0;
@@ -389,8 +389,23 @@ public class Scanner {
                 case "writeln":
                     t.kind = Token.WRITELN;
                     break;
+                case "char":
+                    t.kind = Token.TYPE;
+                    break;
+                case "boolean":
+                    t.kind = Token.TYPE;
+                    break;
+                case "int":
+                    t.kind = Token.TYPE;
+                    break;
+                case "float":
+                    t.kind = Token.TYPE;
+                    break;
+                case "double":
+                    t.kind = Token.TYPE;
+                    break;
 
-            }
+                }
         else
         {
             t.kind = Token.IDENT;
