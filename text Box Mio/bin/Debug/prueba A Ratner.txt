@@ -1,8 +1,0 @@
-class ProgPpal      
-{
-void Main()
-int int;
-{
-x=2+(3+5)*5;
-}
-}

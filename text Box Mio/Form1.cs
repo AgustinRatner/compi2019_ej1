@@ -271,8 +271,7 @@ namespace at.jku.ssw.cc //Compilador //text_Box_Mio
                 // Create an instance of StreamReader to read from a file.
                 // The using statement also closes the StreamReader.
                 //Lee: OK
-                //using (StreamReader myFile = new StreamReader("z_gramatica.txt"))
-                using (StreamReader myFile = new StreamReader("z_gramatica_A Ratner.txt"))
+                using (StreamReader myFile = new StreamReader("z_gramatica.txt")) //
                 {
                     myString = myFile.ReadToEnd();
                     richTextBox7.Text = myString;
