@@ -291,11 +291,11 @@ namespace at.jku.ssw.cc
         {
             int tamDelSegm = 15;  //21
 
-            // G3 PERU Se le suma 9 porque en statement hay 9 lineas en una sola regla.
+            // G3 PERU Se le suma 10 porque en statement hay 10 lineas en una sola regla.
             // Si se agrega una regla antes de Statement, revisar.
             if (lineaEnLaGramatica > 18)
             {
-                lineaEnLaGramatica += 9;
+                lineaEnLaGramatica += 10;
             }
             if (Parser.muestraProducciones)
             {
